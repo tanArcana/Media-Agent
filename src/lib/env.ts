@@ -17,6 +17,10 @@ const envSchema = z.object({
     .default('false')
     .transform((v) => v === 'true'),
   MOCK_PROVIDER_FAIL_RATE: z.coerce.number().min(0).max(1).default(0),
+  USE_STUBS: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((v) => v === 'true'),
   LOG_LEVEL: z
     .enum(['trace', 'debug', 'info', 'warn', 'error'])
     .default('info'),
