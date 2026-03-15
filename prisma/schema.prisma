@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Workspace & Users ───────────────────────────────────────────────────────
+
+model Workspace {
+  id         String   @id @default(cuid())
+  clerkOrgId String   @unique
+  name       String
+  slug       String   @unique
+  plan       Plan     @default(FREE)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  members   WorkspaceMember[]
+  brandDnas BrandDNA[]
+  campaigns Campaign[]
+  assets    Asset[]
+  jobs      PipelineJob[]
+
+  @@index([clerkOrgId])
+}
+
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+  workspaceId String
+  clerkUserId String
+  role        WorkspaceRole @default(MEMBER)
+  joinedAt    DateTime      @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, clerkUserId])
+  @@index([clerkUserId])
+}
+
+enum Plan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+// ─── Brand DNA ───────────────────────────────────────────────────────────────
+
+model BrandDNA {
+  id                   String   @id @default(cuid())
+  workspaceId          String
+  version              Int      @default(1)
+  isActive             Boolean  @default(true)
+  brandName            String
+  industry             String
+  brandPersonality     String[]
+  colorPalette         Json
+  typography           Json
+  visualStyle          String
+  mood                 String[]
+  lightingStyle        String
+  colorTreatment       String
+  composition          Json
+  forbiddenElements    String[]
+  requiredElements     String[]
+  subjectTypes         String[]
+  extractionConfidence Float    @default(0)
+  extractionJobId      String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, version])
+  @@index([workspaceId, isActive])
+}
+
+// ─── Campaigns ───────────────────────────────────────────────────────────────
+
+model Campaign {
+  id          String         @id @default(cuid())
+  workspaceId String
+  name        String
+  description String?
+  brief       String?
+  status      CampaignStatus @default(DRAFT)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  workspace Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  assets    Asset[]
+  jobs      PipelineJob[]
+
+  @@index([workspaceId])
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+// ─── Assets ──────────────────────────────────────────────────────────────────
+
+model Asset {
+  id             String      @id @default(cuid())
+  workspaceId    String
+  campaignId     String?
+  jobId          String?     @unique
+  type           AssetType
+  status         AssetStatus @default(PENDING)
+  originalUrl    String?
+  thumbnailUrl   String?
+  aspectRatio    String?
+  width          Int?
+  height         Int?
+  durationMs     Int?
+  prompt         String?
+  negativePrompt String?
+  providerModel  String?
+  brandDnaId     String?
+  brandScore     Float?
+  qualityScore   Float?
+  humanReviewed  Boolean     @default(false)
+  humanApproved  Boolean?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  workspace Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  campaign  Campaign?    @relation(fields: [campaignId], references: [id])
+  job       PipelineJob? @relation(fields: [jobId], references: [id])
+
+  @@index([workspaceId])
+  @@index([campaignId])
+}
+
+enum AssetType {
+  IMAGE
+  VIDEO
+}
+
+enum AssetStatus {
+  PENDING
+  GENERATING
+  AWAITING_REVIEW
+  APPROVED
+  REJECTED
+  FAILED
+}
+
+// ─── Pipeline Jobs ───────────────────────────────────────────────────────────
+
+model PipelineJob {
+  id           String    @id @default(cuid())
+  workspaceId  String
+  campaignId   String?
+  type         JobType   @default(GENERATE_ASSET)
+  status       JobStatus @default(QUEUED)
+  priority     Int       @default(5)
+  input        Json
+  output       Json?
+  errorCode    String?
+  errorMessage String?
+  queuedAt     DateTime  @default(now())
+  startedAt    DateTime?
+  completedAt  DateTime?
+  failedAt     DateTime?
+  attemptCount Int       @default(0)
+  maxAttempts  Int       @default(3)
+  nextRetryAt  DateTime?
+  currentStage String?
+  progressPct  Int?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  campaign  Campaign? @relation(fields: [campaignId], references: [id])
+  asset     Asset?
+
+  @@index([workspaceId, status])
+  @@index([status, nextRetryAt])
+}
+
+enum JobType {
+  GENERATE_ASSET
+  EXTRACT_DNA
+  BATCH_GENERATE
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  AWAITING_REVIEW
+  COMPLETED
+  FAILED
+  CANCELLED
+}
