@@ -38,9 +38,9 @@ function buildStubResult(input: DNAExtractorInput): BrandDNA {
 export async function runDNAExtractor(
   input: DNAExtractorInput,
 ): Promise<BrandDNA> {
-  const useStubs = process.env.USE_STUBS !== 'false';
+  const stubMode = process.env.USE_STUBS !== 'false';
 
-  if (useStubs) {
+  if (stubMode) {
     logger.info('DNA extractor running in stub mode');
     return buildStubResult(input);
   }

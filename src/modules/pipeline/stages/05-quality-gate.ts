@@ -6,7 +6,7 @@ import { PipelineError } from '../types';
 
 const STUB_DELAY_MS = 500;
 
-function useStubs(): boolean {
+function isStubMode(): boolean {
   return process.env.USE_STUBS !== 'false';
 }
 
@@ -18,7 +18,7 @@ export async function qualityGate(ctx: PipelineContext): Promise<PipelineContext
     throw new PipelineError('QUALITY_GATE', 'QUALITY_GATE_REJECTED', 'rawOutput is required');
   }
 
-  if (useStubs()) {
+  if (isStubMode()) {
     await new Promise((r) => setTimeout(r, STUB_DELAY_MS));
     const overallScore = 0.88;
     const brandComplianceScore = 0.85;

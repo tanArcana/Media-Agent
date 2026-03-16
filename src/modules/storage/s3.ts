@@ -1,5 +1,5 @@
 import { logger } from '@/lib/logger';
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 export interface StorageProvider {
   upload(key: string, data: Buffer | Uint8Array, contentType: string): Promise<string>;

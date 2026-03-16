@@ -5,7 +5,7 @@ import { getStorageProvider } from '@/modules/storage';
 import type { PipelineContext } from '../types';
 import { PipelineError } from '../types';
 
-function useStubs(): boolean {
+function isStubMode(): boolean {
   return process.env.USE_STUBS !== 'false';
 }
 
@@ -20,7 +20,7 @@ export async function delivery(ctx: PipelineContext): Promise<PipelineContext> {
   const mediaType = ctx.brief.mediaType;
   const ext = mediaType === 'VIDEO' ? 'mp4' : 'png';
 
-  if (useStubs()) {
+  if (isStubMode()) {
     await new Promise((r) => setTimeout(r, 300));
     const assetId = `asset_${ctx.jobId}_${Date.now()}`;
 

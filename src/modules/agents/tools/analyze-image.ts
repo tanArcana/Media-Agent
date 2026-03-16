@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { ToolDefinition } from '../types';
 
-function useStubs(): boolean {
+function isStubMode(): boolean {
   return process.env.USE_STUBS !== 'false';
 }
 
@@ -19,7 +19,7 @@ export const analyzeImageTool: ToolDefinition = {
     },
   },
   handler: async (input) => {
-    if (useStubs()) {
+    if (isStubMode()) {
       return {
         analysis: `Mock analysis of image at ${input.imageUrl}: Professional quality, balanced composition, warm color palette, good lighting.`,
         structuredData: {

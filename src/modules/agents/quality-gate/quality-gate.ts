@@ -40,9 +40,9 @@ function buildStubResult(): QualityResult {
 export async function runQualityGate(
   input: QualityGateInput,
 ): Promise<QualityResult> {
-  const useStubs = process.env.USE_STUBS !== 'false';
+  const stubMode = process.env.USE_STUBS !== 'false';
 
-  if (useStubs) {
+  if (stubMode) {
     logger.info('Quality gate running in stub mode');
     return buildStubResult();
   }

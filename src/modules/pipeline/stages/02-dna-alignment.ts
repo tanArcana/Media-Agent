@@ -5,7 +5,7 @@ import type { PipelineContext } from '../types';
 
 const STUB_DELAY_MS = 500;
 
-function useStubs(): boolean {
+function isStubMode(): boolean {
   return process.env.USE_STUBS !== 'false';
 }
 
@@ -13,7 +13,7 @@ export async function dnaAlignment(ctx: PipelineContext): Promise<PipelineContex
   const start = Date.now();
   logger.info({ jobId: ctx.jobId, stage: 'DNA_ALIGNMENT' }, 'Starting DNA alignment');
 
-  if (useStubs()) {
+  if (isStubMode()) {
     await new Promise((r) => setTimeout(r, STUB_DELAY_MS));
     const dna = ctx.dna ?? DEFAULT_DNA;
     const alignment = {

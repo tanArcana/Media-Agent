@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown, Bell, Mail, CheckCircle2, XCircle, AlertTriangle, Sparkles } from 'lucide-react';
+import { ChevronDown, Mail, CheckCircle2, XCircle, AlertTriangle, Sparkles } from 'lucide-react';
 
 const NotificationPrefsSchema = z.object({
   onJobComplete: z.boolean(),

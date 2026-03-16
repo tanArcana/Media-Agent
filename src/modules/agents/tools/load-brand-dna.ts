@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { DEFAULT_DNA, type BrandDNA } from '@/modules/brand-dna';
 import type { ToolDefinition } from '../types';
 
-function useStubs(): boolean {
+function isStubMode(): boolean {
   return process.env.USE_STUBS !== 'false';
 }
 
@@ -21,7 +21,7 @@ export const loadBrandDnaTool: ToolDefinition = {
   handler: async (input): Promise<BrandDNA> => {
     const workspaceId = input.workspaceId as string;
 
-    if (useStubs()) {
+    if (isStubMode()) {
       return { ...DEFAULT_DNA, extractedAt: new Date() };
     }
 

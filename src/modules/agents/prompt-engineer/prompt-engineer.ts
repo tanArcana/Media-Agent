@@ -64,9 +64,9 @@ function buildStubResult(input: PromptEngineerInput): GenerationPrompt {
 export async function runPromptEngineer(
   input: PromptEngineerInput,
 ): Promise<GenerationPrompt> {
-  const useStubs = process.env.USE_STUBS !== 'false';
+  const stubMode = process.env.USE_STUBS !== 'false';
 
-  if (useStubs) {
+  if (stubMode) {
     logger.info('Prompt engineer running in stub mode');
     return buildStubResult(input);
   }

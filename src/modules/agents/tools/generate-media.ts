@@ -2,7 +2,7 @@ import { getMediaProvider } from '@/modules/media';
 import { withRetry } from '@/lib/retry';
 import type { ToolDefinition } from '../types';
 
-function useStubs(): boolean {
+function isStubMode(): boolean {
   return process.env.USE_STUBS !== 'false';
 }
 
@@ -21,7 +21,7 @@ export const generateMediaTool: ToolDefinition = {
     },
   },
   handler: async (input) => {
-    if (useStubs()) {
+    if (isStubMode()) {
       const jobId = `mock_${Date.now()}`;
       return { jobId, outputUrls: [`https://mock.storage/outputs/${jobId}/result.png`] };
     }

@@ -12,7 +12,7 @@ const ASPECT_RATIO_DIMS: Record<string, { width: number; height: number }> = {
   '4:5': { width: 896, height: 1120 },
 };
 
-function useStubs(): boolean {
+function isStubMode(): boolean {
   return process.env.USE_STUBS !== 'false';
 }
 
@@ -27,7 +27,7 @@ export async function promptEngineering(ctx: PipelineContext): Promise<PipelineC
   const dna = ctx.dna;
   const dims = ASPECT_RATIO_DIMS[ctx.brief.aspectRatio] ?? ASPECT_RATIO_DIMS['1:1'];
 
-  if (useStubs()) {
+  if (isStubMode()) {
     await new Promise((r) => setTimeout(r, STUB_DELAY_MS));
     const mood = dna?.mood?.join(', ') ?? 'professional';
     const style = dna?.visualStyle ?? 'clean photography';

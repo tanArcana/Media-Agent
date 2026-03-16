@@ -6,7 +6,7 @@ import { PipelineError } from '../types';
 
 const STUB_DELAY_MS = 500;
 
-function useStubs(): boolean {
+function isStubMode(): boolean {
   return process.env.USE_STUBS !== 'false';
 }
 
@@ -14,7 +14,7 @@ export async function briefAnalysis(ctx: PipelineContext): Promise<PipelineConte
   const start = Date.now();
   logger.info({ jobId: ctx.jobId, stage: 'BRIEF_ANALYSIS' }, 'Starting brief analysis');
 
-  if (useStubs()) {
+  if (isStubMode()) {
     await new Promise((r) => setTimeout(r, STUB_DELAY_MS));
     const analyzedBrief = {
       intent: `Create a ${ctx.brief.mediaType.toLowerCase()} asset: ${ctx.brief.userPrompt}`,

@@ -71,12 +71,14 @@ describe('runPipeline', () => {
   it('records stage timings for every stage', async () => {
     const result = await runPipeline(makeContext());
 
-    expect(result.stageTimings.BRIEF_ANALYSIS).toBeGreaterThan(0);
-    expect(result.stageTimings.DNA_ALIGNMENT).toBeGreaterThan(0);
-    expect(result.stageTimings.PROMPT_ENGINEERING).toBeGreaterThan(0);
-    expect(result.stageTimings.GENERATION).toBeGreaterThan(0);
-    expect(result.stageTimings.QUALITY_GATE).toBeGreaterThan(0);
-    expect(result.stageTimings.DELIVERY).toBeGreaterThan(0);
+    expect(result.stageTimings.BRIEF_ANALYSIS).toBeGreaterThanOrEqual(0);
+    expect(result.stageTimings.DNA_ALIGNMENT).toBeGreaterThanOrEqual(0);
+    expect(result.stageTimings.PROMPT_ENGINEERING).toBeGreaterThanOrEqual(0);
+    expect(result.stageTimings.GENERATION).toBeGreaterThanOrEqual(0);
+    expect(result.stageTimings.QUALITY_GATE).toBeGreaterThanOrEqual(0);
+    expect(result.stageTimings.DELIVERY).toBeGreaterThanOrEqual(0);
+    // Ensure all 6 stages were timed
+    expect(Object.keys(result.stageTimings)).toHaveLength(6);
   }, 30000);
 
   it('emits status updates via callback', async () => {

@@ -76,15 +76,6 @@ export function ApiKeysForm({ initialStatus }: ApiKeysFormProps) {
     setErrors({});
     setSuccess(false);
 
-    const data = {
-      anthropicApiKey: anthropicApiKey || undefined,
-      falKey: falKey || undefined,
-      awsAccessKeyId: awsAccessKeyId || undefined,
-      awsSecretAccessKey: awsSecretAccessKey || undefined,
-      awsRegion,
-      awsS3Bucket: awsS3Bucket || undefined,
-    };
-
     // Only validate fields that were actually filled in
     if (anthropicApiKey) {
       const parsed = ApiKeysSchema.shape.anthropicApiKey.safeParse(anthropicApiKey);

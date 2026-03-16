@@ -45,9 +45,9 @@ function buildStubResult(ctx: PipelineContext): OrchestratorResult {
 export async function runOrchestrator(
   ctx: PipelineContext,
 ): Promise<OrchestratorResult> {
-  const useStubs = process.env.USE_STUBS !== 'false';
+  const stubMode = process.env.USE_STUBS !== 'false';
 
-  if (useStubs) {
+  if (stubMode) {
     logger.info({ jobId: ctx.jobId }, 'Orchestrator running in stub mode');
     return buildStubResult(ctx);
   }

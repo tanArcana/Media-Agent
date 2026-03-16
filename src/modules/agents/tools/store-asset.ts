@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { withRetry } from '@/lib/retry';
 import type { ToolDefinition } from '../types';
 
-function useStubs(): boolean {
+function isStubMode(): boolean {
   return process.env.USE_STUBS !== 'false';
 }
 
@@ -25,7 +25,7 @@ export const storeAssetTool: ToolDefinition = {
   handler: async (input) => {
     const workspaceId = input.workspaceId as string;
 
-    if (useStubs()) {
+    if (isStubMode()) {
       const assetId = `asset_${Date.now()}`;
       return {
         assetId,
