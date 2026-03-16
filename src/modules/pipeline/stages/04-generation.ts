@@ -1,44 +1,78 @@
 import { logger } from '@/lib/logger';
+import { withRetry } from '@/lib/retry';
+import { getMediaProvider } from '@/modules/media';
 import type { PipelineContext } from '../types';
 import { PipelineError } from '../types';
-
-const STAGE_DELAY_MS = 2000;
 
 export async function generation(ctx: PipelineContext): Promise<PipelineContext> {
   const start = Date.now();
   logger.info({ jobId: ctx.jobId, stage: 'GENERATION' }, 'Starting media generation');
 
   if (!ctx.generationPrompt) {
-    throw new PipelineError(
-      'GENERATION',
-      'PROVIDER_ERROR',
-      'generationPrompt is required for generation',
-    );
+    throw new PipelineError('GENERATION', 'PROVIDER_ERROR', 'generationPrompt is required for generation');
   }
 
-  await new Promise((resolve) => setTimeout(resolve, STAGE_DELAY_MS));
+  const provider = getMediaProvider();
+  const params = ctx.generationPrompt.technicalParams;
 
-  // Mock provider output — in production this calls FAL
-  const rawOutput = {
-    providerJobId: `fal_mock_${ctx.jobId}`,
-    outputUrls: [`https://mock.storage/outputs/${ctx.jobId}/result.png`],
-    generationMetadata: {
-      model: ctx.generationPrompt.technicalParams.model,
-      seed: Math.floor(Math.random() * 1000000),
-      steps: ctx.generationPrompt.technicalParams.steps,
-      duration_ms: STAGE_DELAY_MS,
-    },
-  };
+  try {
+    const result = await withRetry(
+      async () => {
+        if (ctx.brief.mediaType === 'VIDEO') {
+          return provider.generateVideo({
+            prompt: ctx.generationPrompt!.positivePrompt,
+            negativePrompt: ctx.generationPrompt!.negativePrompt,
+            model: params.model as string | undefined,
+            width: params.width as number | undefined,
+            height: params.height as number | undefined,
+          });
+        }
 
-  logger.info(
-    { jobId: ctx.jobId, stage: 'GENERATION', providerJobId: rawOutput.providerJobId },
-    'Media generation complete',
-  );
+        return provider.generateImage({
+          prompt: ctx.generationPrompt!.positivePrompt,
+          negativePrompt: ctx.generationPrompt!.negativePrompt,
+          model: params.model as string | undefined,
+          width: params.width as number | undefined,
+          height: params.height as number | undefined,
+          steps: params.steps as number | undefined,
+          guidanceScale: params.guidanceScale as number | undefined,
+        });
+      },
+      {
+        maxAttempts: 3,
+        baseDelayMs: 2000,
+        maxDelayMs: 8000,
+        onRetry: (attempt) => {
+          logger.warn({ jobId: ctx.jobId, stage: 'GENERATION', attempt }, 'Retrying media generation');
+        },
+      },
+    );
 
-  return {
-    ...ctx,
-    rawOutput,
-    currentStage: 'QUALITY_GATE',
-    stageTimings: { ...ctx.stageTimings, GENERATION: Date.now() - start },
-  };
+    const rawOutput = {
+      providerJobId: result.providerJobId,
+      outputUrls: result.outputUrls,
+      generationMetadata: result.metadata,
+    };
+
+    logger.info(
+      { jobId: ctx.jobId, stage: 'GENERATION', providerJobId: rawOutput.providerJobId, durationMs: Date.now() - start },
+      'Media generation complete',
+    );
+
+    return {
+      ...ctx,
+      rawOutput,
+      currentStage: 'QUALITY_GATE',
+      stageTimings: { ...ctx.stageTimings, GENERATION: Date.now() - start },
+    };
+  } catch (err) {
+    const isTimeout = err instanceof Error && (err.message.includes('timeout') || err.message.includes('Timeout'));
+    throw new PipelineError(
+      'GENERATION',
+      isTimeout ? 'PROVIDER_TIMEOUT' : 'PROVIDER_ERROR',
+      `Media generation failed after retries: ${err instanceof Error ? err.message : 'unknown'}`,
+      false,
+      err,
+    );
+  }
 }

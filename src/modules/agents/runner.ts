@@ -17,7 +17,7 @@ export interface AgentResult {
   iterations: number;
 }
 
-function useStubs(): boolean {
+function isStubMode(): boolean {
   return process.env.USE_STUBS !== 'false';
 }
 
@@ -29,7 +29,7 @@ export async function runAgent(
   const model = config.model ?? 'claude-opus-4-6';
   const maxTokens = config.maxTokens ?? 4096;
 
-  if (useStubs()) {
+  if (isStubMode()) {
     logger.info({ agent: name }, 'Agent running in stub mode (USE_STUBS=true)');
     return {
       text: JSON.stringify(input),

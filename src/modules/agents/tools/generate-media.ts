@@ -1,4 +1,10 @@
+import { getMediaProvider } from '@/modules/media';
+import { withRetry } from '@/lib/retry';
 import type { ToolDefinition } from '../types';
+
+function useStubs(): boolean {
+  return process.env.USE_STUBS !== 'false';
+}
 
 export const generateMediaTool: ToolDefinition = {
   tool: {
@@ -15,11 +21,28 @@ export const generateMediaTool: ToolDefinition = {
     },
   },
   handler: async (input) => {
-    // Stub: return mock URLs
-    const jobId = `mock_${Date.now()}`;
-    return {
-      jobId,
-      outputUrls: [`https://mock.storage/outputs/${jobId}/result.png`],
-    };
+    if (useStubs()) {
+      const jobId = `mock_${Date.now()}`;
+      return { jobId, outputUrls: [`https://mock.storage/outputs/${jobId}/result.png`] };
+    }
+
+    const provider = getMediaProvider();
+    const params = (input.params ?? {}) as Record<string, unknown>;
+
+    const result = await withRetry(
+      () =>
+        provider.generateImage({
+          prompt: input.prompt as string,
+          negativePrompt: input.negativePrompt as string,
+          model: params.model as string | undefined,
+          width: params.width as number | undefined,
+          height: params.height as number | undefined,
+          steps: params.steps as number | undefined,
+          guidanceScale: params.guidanceScale as number | undefined,
+        }),
+      { maxAttempts: 3, baseDelayMs: 2000 },
+    );
+
+    return { jobId: result.providerJobId, outputUrls: result.outputUrls };
   },
 };

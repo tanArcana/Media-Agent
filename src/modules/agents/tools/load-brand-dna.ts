@@ -1,6 +1,10 @@
-import type Anthropic from '@anthropic-ai/sdk';
+import { prisma } from '@/lib/prisma';
 import { DEFAULT_DNA, type BrandDNA } from '@/modules/brand-dna';
 import type { ToolDefinition } from '../types';
+
+function useStubs(): boolean {
+  return process.env.USE_STUBS !== 'false';
+}
 
 export const loadBrandDnaTool: ToolDefinition = {
   tool: {
@@ -15,8 +19,38 @@ export const loadBrandDnaTool: ToolDefinition = {
     },
   },
   handler: async (input): Promise<BrandDNA> => {
-    // Stub: return DEFAULT_DNA. In production, query Prisma.
-    const _workspaceId = input.workspaceId as string;
-    return { ...DEFAULT_DNA, extractedAt: new Date() };
+    const workspaceId = input.workspaceId as string;
+
+    if (useStubs()) {
+      return { ...DEFAULT_DNA, extractedAt: new Date() };
+    }
+
+    const dbDna = await prisma.brandDNA.findFirst({
+      where: { workspaceId, isActive: true },
+      orderBy: { version: 'desc' },
+    });
+
+    if (!dbDna) {
+      return { ...DEFAULT_DNA, extractedAt: new Date() };
+    }
+
+    return {
+      brandName: dbDna.brandName,
+      industry: dbDna.industry,
+      brandPersonality: dbDna.brandPersonality,
+      colorPalette: dbDna.colorPalette,
+      typography: dbDna.typography,
+      visualStyle: dbDna.visualStyle,
+      mood: dbDna.mood,
+      lightingStyle: dbDna.lightingStyle,
+      colorTreatment: dbDna.colorTreatment,
+      composition: dbDna.composition,
+      forbiddenElements: dbDna.forbiddenElements,
+      requiredElements: dbDna.requiredElements,
+      subjectTypes: dbDna.subjectTypes,
+      version: dbDna.version,
+      extractedAt: dbDna.createdAt,
+      extractionConfidence: dbDna.extractionConfidence,
+    } as BrandDNA;
   },
 };

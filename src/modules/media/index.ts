@@ -1,2 +1,8 @@
-// Media provider module — public API
-// Implemented in PR 3
+export { getMediaProvider, MockMediaProvider, FalMediaProvider } from './providers';
+export type {
+  MediaProvider,
+  ImageGenerationParams,
+  ImageGenerationResult,
+  VideoGenerationParams,
+  VideoGenerationResult,
+} from './types';
