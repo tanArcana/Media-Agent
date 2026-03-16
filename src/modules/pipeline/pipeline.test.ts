@@ -6,6 +6,36 @@ vi.mock('@/lib/logger', () => ({
   logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
 }));
 
+vi.mock('@/lib/prisma', () => ({
+  prisma: {
+    brandDNA: { findFirst: vi.fn().mockResolvedValue(null) },
+    asset: { create: vi.fn().mockResolvedValue({ id: 'test-asset-id' }) },
+  },
+}));
+
+vi.mock('@/modules/media', () => ({
+  getMediaProvider: () => ({
+    generateImage: vi.fn().mockResolvedValue({
+      providerJobId: 'mock-job',
+      outputUrls: ['https://mock/test.png'],
+      metadata: { provider: 'mock' },
+    }),
+    generateVideo: vi.fn().mockResolvedValue({
+      providerJobId: 'mock-job',
+      outputUrls: ['https://mock/test.mp4'],
+      metadata: { provider: 'mock' },
+    }),
+  }),
+}));
+
+vi.mock('@/modules/storage', () => ({
+  getStorageProvider: () => ({
+    upload: vi.fn().mockResolvedValue('https://mock-storage/uploaded.png'),
+    getUrl: vi.fn().mockReturnValue('https://mock-storage/url'),
+    delete: vi.fn(),
+  }),
+}));
+
 function makeContext(overrides: Partial<PipelineContext> = {}): PipelineContext {
   return {
     jobId: 'test-job-1',
@@ -72,6 +102,8 @@ describe('runPipeline', () => {
       makeContext({ brief: { userPrompt: 'test', mediaType: 'IMAGE', aspectRatio: '16:9' } }),
     );
 
-    expect(result.generationPrompt?.technicalParams.height).toBe(576);
+    // 16:9 uses 1344x768 dimensions
+    expect(result.generationPrompt?.technicalParams.width).toBe(1344);
+    expect(result.generationPrompt?.technicalParams.height).toBe(768);
   }, 30000);
 });
